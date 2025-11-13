@@ -1,0 +1,35 @@
+﻿Deployment Information
+======================
+Date: 11/06/2025 12:19:06
+Resource Group: rg-architect-agent
+Location: eastus
+
+Application URLs:
+  Frontend: https://prod-readiness-chatbot-frontend.purplepond-cf7bd915.eastus.azurecontainerapps.io
+  Backend: https://prod-readiness-chatbot-backend.purplepond-cf7bd915.eastus.azurecontainerapps.io
+
+Container Registry: prodreadinesschatbotacr.azurecr.io
+
+Backend Managed Identity: a865328f-9bbb-4e42-90a1-97757889b5bf
+
+Container Apps:
+  Frontend: prod-readiness-chatbot-frontend
+  Backend: prod-readiness-chatbot-backend
+  Environment: prod-readiness-chatbot-env
+
+Log Analytics: prod-readiness-chatbot-logs
+
+Update Commands:
+================
+
+Update Backend:
+az acr build --registry prodreadinesschatbotacr --image architect-agent-backend:latest --file Dockerfile.backend .
+az containerapp update --name prod-readiness-chatbot-backend --resource-group rg-architect-agent --image prodreadinesschatbotacr.azurecr.io/architect-agent-backend:latest
+
+Update Frontend:
+az acr build --registry prodreadinesschatbotacr --image architect-agent-frontend:latest --file Dockerfile.frontend .
+az containerapp update --name prod-readiness-chatbot-frontend --resource-group rg-architect-agent --image prodreadinesschatbotacr.azurecr.io/architect-agent-frontend:latest
+
+View Logs:
+az containerapp logs show --name prod-readiness-chatbot-backend --resource-group rg-architect-agent --follow
+az containerapp logs show --name prod-readiness-chatbot-frontend --resource-group rg-architect-agent --follow
