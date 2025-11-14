@@ -43,10 +43,6 @@ export default function ChatPage() {
   // Check URL params for mode=simple
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const mode = params.get('mode')
-    if (mode === 'simple') {
-      setUseSimpleEndpoint(true)
-    }
   }, [])
 
   const startProductionReadiness = async (service: string) => {
@@ -57,9 +53,7 @@ export default function ChatPage() {
       setShowStarterQuestions(false)
       
       // Use simple endpoint if mode=simple in URL
-      const endpoint = useSimpleEndpoint 
-        ? `${API_URL}/api/production-readiness-simple`
-        : `${API_URL}/api/production-readiness`
+      const endpoint = `${API_URL}/api/production-readiness`
       
       const response = await fetch(endpoint, {
         method: 'POST',
