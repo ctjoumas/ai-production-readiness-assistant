@@ -1,6 +1,8 @@
 # GenAI Chatbot Application
 
-A production-grade GenAI chatbot application with a FastAPI backend and Next.js frontend.
+A production assistant chatbot application with a FastAPI backend and Next.js frontend.
+
+Credit: Initial app from Dan's repo over at https://github.com/DanGiannone1/architect_agent
 
 ## Architecture
 
