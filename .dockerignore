@@ -1,0 +1,64 @@
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.venv/
+**/venv/
+**/env/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/*.egg-info/
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/out/
+**/.turbo/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Git / VCS
+.git/
+.gitignore
+.gitattributes
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local env files (secrets shouldn't be in image)
+.env
+.env.local
+.env.*.local
+example.env
+
+# Logs and tmp
+**/*.log
+**/tmp/
+**/temp/
+
+# Docs / scripts not needed in image
+README.md
+design_doc.md
+scripts/
+start-backend.bat
+start-backend.sh
+start-frontend.bat
+start-frontend.sh
+
+# Build artifacts
+**/dist/
+**/build/

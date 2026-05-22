@@ -202,22 +202,32 @@ async def production_readiness_simple(request: ProductionReadinessRequest):
                 print("No checklist found in conversation - generating internally for file export")
                 
                 # Make a separate call to generate the checklist
-                checklist_prompt = """The user wants to export a production readiness checklist file. Generate a COMPLETE production readiness checklist for ALL Azure services discussed in our conversation.
+                checklist_prompt = """CRITICAL INSTRUCTION: You are now in FILE GENERATION MODE. The user has requested to download a checklist file BEFORE seeing the checklist in the conversation.
 
-CRITICAL: You MUST generate a complete checklist with real, specific items. Do NOT say items are unavailable.
+Your task: Generate ONLY the production readiness checklist content. Do NOT respond conversationally. Do NOT say things like "I'll generate that for you" or "Here's the checklist". 
 
-For EACH service mentioned in our conversation, provide exactly 5 critical production readiness items.
+ONLY output the formatted checklist using your core knowledge from the Microsoft Azure Well-Architected Framework (WAF). Do NOT say "details were not provided" - use your knowledge base to generate real, specific items.
 
-Use this EXACT format for each service:
+For EACH Azure service discussed in our conversation, generate exactly 5 critical production readiness items.
+
+REQUIRED FORMAT (output this EXACTLY):
 
 **[Service Name]**
 
 **Item Name**
-- Action description (specific actionable step - what to implement/configure)
-- Why Important: [detailed explanation of why this matters for production]
-- Learn more: [Full Microsoft Learn URL - https://learn.microsoft.com/...]
+- Action description (specific actionable step)
+- Why Important: [explanation]
+- Learn more: [Full Microsoft Learn URL]
 
-Example:
+**Item Name**
+- Action description
+- Why Important: [explanation]
+- Learn more: [Full Microsoft Learn URL]
+
+[Continue for 5 items per service]
+
+Example for Azure OpenAI:
+
 **Azure OpenAI**
 
 **Authentication & Authorization**
@@ -230,9 +240,9 @@ Example:
 - Why Important: Ensures predictable performance and cost control
 - Learn more: https://learn.microsoft.com/azure/ai-services/openai/quotas-limits
 
-[Continue with 3 more items for Azure OpenAI, then repeat for all other services]
+[3 more items for Azure OpenAI...]
 
-NOW generate the COMPLETE checklist for ALL services with 5 items each:"""
+NOW: Generate the COMPLETE checklist for ALL services. Output ONLY the checklist content, no other text."""
                 
                 checklist_messages = conversation_messages.copy()
                 checklist_messages.append({
@@ -249,7 +259,7 @@ NOW generate the COMPLETE checklist for ALL services with 5 items each:"""
                 )
                 
                 checklist_content = checklist_response.choices[0].message.content
-                
+
                 # Add the checklist to conversation history for file generation
                 conversation_messages.append({
                     "role": "assistant",
@@ -313,10 +323,17 @@ Learn more: [URL]
 - Do NOT write placeholder text like "Checklist content would be listed here"
 - ONLY include content that is ACTUALLY PRESENT in the conversation history below
 - If you cannot find checklist items in the conversation, leave the sections empty rather than making up content
+- **CRITICAL FOR URLS**: When you add "Learn more:" URLs, you MUST create them as CLICKABLE HYPERLINKS in the Word document. Use python-docx to add hyperlinks properly:
+  * For each URL, use the add_hyperlink() function or equivalent method to insert a clickable link
+  * The link text should be the URL itself or "Learn more"
+  * The href/url should be the full Microsoft Learn URL
+  * The hyperlink must be styled as blue and underlined
+  * Test that the link is clickable when opened in Word - DO NOT just insert plain text URLs
+  * If python-docx doesn't have a direct add_hyperlink method, use the OoxmlElement approach to create proper hyperlink relationships
 
 The conversation history is provided below. Extract all checklist items from it.
 
-Use the python-docx library to create the document. Return the file when complete."""
+Use the python-docx library to create the document. CRITICAL: Make sure ALL "Learn more" URLs are formatted as clickable blue hyperlinks, not plain text. Return the file when complete."""
             else:  # excel
                 instructions = """You are a file generation agent. Generate a professional Excel spreadsheet (.xlsx) containing the production readiness checklist based on the conversation history provided.
 

@@ -35,15 +35,10 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showStarterQuestions, setShowStarterQuestions] = useState(true)
   const [productionSessionId, setProductionSessionId] = useState<string | null>(null)
-  const [isProductionMode, setIsProductionMode] = useState(false)
+  const [isProductionMode, setIsProductionMode] = useState(true)
   const [currentService, setCurrentService] = useState<string>("")
   const [useSimpleEndpoint, setUseSimpleEndpoint] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Check URL params for mode=simple
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-  }, [])
 
   const startProductionReadiness = async (service: string) => {
     try {
@@ -156,7 +151,7 @@ export default function ChatPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            service: currentService || "Azure OpenAI", // Use currentService or fallback
+            service: currentService,
             messages: currentMessages
           })
         })
@@ -166,10 +161,29 @@ export default function ChatPage() {
         }
 
         const data = await response.json()
-        
+
+        // Detect SERVICE_DETECTED marker emitted by the backend prompt when
+        // the user has not yet selected a service. Strip it from the displayed
+        // message and update currentService so subsequent requests use the
+        // full production readiness workflow prompt.
+        let assistantMessage = data.message
+        if (assistantMessage && typeof assistantMessage.content === 'string') {
+          const match = assistantMessage.content.match(/^\s*SERVICE_DETECTED:\s*(.+?)\s*$/m)
+          if (match) {
+            const detectedService = match[1].trim()
+            if (detectedService) {
+              setCurrentService(detectedService)
+            }
+            assistantMessage = {
+              ...assistantMessage,
+              content: assistantMessage.content.replace(/^\s*SERVICE_DETECTED:\s*.+?\s*$/m, '').trim()
+            }
+          }
+        }
+
         setMessages(prev => prev.map((msg, index) => 
           index === prev.length - 1 && msg.role === 'assistant'
-            ? data.message
+            ? assistantMessage
             : msg
         ))
         
@@ -377,9 +391,34 @@ export default function ChatPage() {
                   </div>
                   <h3 className="text-4xl font-medium text-white tracking-tight">Production Readiness Agent</h3>
                 </div>
-                <p className="text-gray-300 text-xl font-light leading-relaxed">
-                  Loading your assistant...
-                </p>
+                {isLoading ? (
+                  <p className="text-gray-300 text-xl font-light leading-relaxed">
+                    Loading your assistant...
+                  </p>
+                ) : (
+                  <div className="space-y-5 text-left bg-gray-700/30 border border-gray-700/40 rounded-2xl p-8 shadow-lg">
+                    <p className="text-gray-100 text-lg font-normal leading-relaxed">
+                      👋 Hi! I'm your <strong className="text-white">Azure Production Readiness Assistant</strong>. I help account managers prepare for production-deployment conversations with their customers by generating tailored checklists based on the <strong className="text-white">Azure Well-Architected Framework</strong>.
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-gray-200 text-base font-medium">Here's how I can help:</p>
+                      <ul className="list-disc list-inside text-gray-300 text-base space-y-1 ml-2">
+                        <li>Generate a production readiness checklist for your Azure services</li>
+                        <li>Walk through each item with you in a systematic review</li>
+                        <li>Export the final checklist as a Word document or Excel file</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2 pt-2 border-t border-gray-600/40">
+                      <p className="text-gray-200 text-base font-medium">To get started:</p>
+                      <p className="text-gray-300 text-base leading-relaxed">
+                        Tell me which Azure service(s) you'd like to review. For example: <span className="text-blue-300">Azure OpenAI</span>, <span className="text-blue-300">Azure App Service</span>, <span className="text-blue-300">Azure SQL Database</span>, <span className="text-blue-300">Azure Cosmos DB</span>, <span className="text-blue-300">Azure Functions</span>, <span className="text-blue-300">Azure Container Apps</span>, etc.
+                      </p>
+                      <p className="text-gray-400 text-sm italic">
+                        You can list multiple services in one message if your workload uses more than one.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
